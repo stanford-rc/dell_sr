@@ -58,7 +58,7 @@ with the company and primary support contact:
   "id": "0",
   "type": "HELPDESK",
   "ipaddress": "192.0.2.10",
-  "companyName": "Example University",
+  "companyName": "Example Company",
   "countryCodeISO": "USA",
   "emailOptIn": true,
   "primaryContact": {
@@ -100,7 +100,7 @@ service tag:
     "id": "YOUR_REGISTERED_CLIENT_ID",
     "type": "HELPDESK",
     "ipAddress": "192.0.2.10",
-    "companyName": "Example University",
+    "companyName": "Example Company",
     "emailOptIn": true,
     "countryCodeISO": "USA",
     "primaryContact": {

@@ -66,7 +66,6 @@ with the company and primary support contact:
     "lastName": "Doe",
     "phoneNumber": "6505550100",
     "emailAddress": "jane.doe@example.com",
-    "preferredContactMethod": "Email",
     "preferredLanguage": "en"
   }
 }
@@ -91,38 +90,33 @@ service tag:
 
 ```json
 {
-  "trapId": "0",
-  "eventId": "hardware_failure",
+  "eventId": "1",
   "eventSource": "Client",
   "timestamp": "2026-09-15T19:00:00Z",
-  "message": "Describe the failure, diagnostics, and troubleshooting already performed.",
   "client": {
     "id": "YOUR_REGISTERED_CLIENT_ID",
     "type": "HELPDESK",
     "ipAddress": "192.0.2.10",
     "companyName": "Example Company",
-    "emailOptIn": true,
     "countryCodeISO": "USA",
     "primaryContact": {
       "firstName": "Jane",
       "lastName": "Doe",
       "phoneNumber": "6505550100",
       "emailAddress": "jane.doe@example.com",
-      "preferredContactMethod": "Email",
       "preferredLanguage": "en"
     }
   },
   "device": {
-    "name": "host.example.com",
     "serviceTag": "ABC1234",
-    "type": "PowerEdge",
-    "os": "Linux"
+    "type": "PowerEdge"
   }
 }
 ```
 
-Use the current UTC time for `timestamp`. The `message` can contain up to 7,500
-characters. If an API-created request is already active for the service tag,
+Use the current UTC time for `timestamp`. Dell requires at least one of
+`eventId` or `trapId`; the identifier must be valid for the selected
+`eventSource`. If an API-created request is already active for the service tag,
 Dell appends the new report to that request instead of opening a duplicate.
 
 Submit the payload with:
@@ -143,5 +137,4 @@ Submit the payload with:
 
 The `register`, `create`, and `close` commands accept the JSON payloads defined
 in Dell's SDK. Download the current Technical Support Request SDK from the API
-tile in [TechDirect](https://techdirect.dell.com/). The SDK is confidential and
-is not included in this repository.
+tile in [TechDirect](https://techdirect.dell.com/).

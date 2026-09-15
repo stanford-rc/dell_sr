@@ -96,8 +96,8 @@ service tag:
 
 ```json
 {
-  "eventId": "1",
-  "eventSource": "Client",
+  "eventId": "2",
+  "eventSource": "Server",
   "timestamp": "2026-09-15T19:00:00Z",
   "client": {
     "id": "YOUR_REGISTERED_CLIENT_ID",
@@ -120,10 +120,22 @@ service tag:
 }
 ```
 
-Use the current UTC time for `timestamp`. Dell requires at least one of
-`eventId` or `trapId`; the identifier must be valid for the selected
-`eventSource`. If an API-created request is already active for the service tag,
-Dell appends the new report to that request instead of opening a duplicate.
+Use the current UTC time for `timestamp`. `eventSource` identifies the hardware
+category, and its `eventId` or `trapId` must use Dell's matching value:
+
+| Hardware category | `eventSource` | `eventId` | `trapId` |
+| --- | --- | --- | --- |
+| Client device | `Client` | `1` | `0` |
+| Server | `Server` | `2` | `0` |
+| Storage | `Storage` | `3` | `0` |
+| Direct-attached storage | `DirectAttach` | `4` | `0` |
+
+Dell requires at least one of `eventId` or `trapId`. The example supplies the
+server `eventId` and omits `trapId`. An invalid identifier, an unsupported
+source, or a mismatched combination causes case creation to fail.
+
+If an API-created request is already active for the service tag, Dell appends
+the new report to that request instead of opening a duplicate.
 
 Submit the payload with:
 

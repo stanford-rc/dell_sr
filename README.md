@@ -91,14 +91,15 @@ customer instance.
 
 ### Create a support request
 
-Create `case.json` using the registered client ID and the affected system's
-service tag:
+Create `case.json` using the registered client ID, the affected system's
+service tag, and a description of the problem:
 
 ```json
 {
   "eventId": "2",
   "eventSource": "Server",
   "timestamp": "2026-09-15T19:00:00Z",
+  "message": "GPU 1 reports uncorrectable memory errors and row remapping failed.",
   "client": {
     "id": "YOUR_REGISTERED_CLIENT_ID",
     "type": "HELPDESK",
@@ -120,8 +121,12 @@ service tag:
 }
 ```
 
-Use the current UTC time for `timestamp`. `eventSource` identifies the hardware
-category, and its `eventId` or `trapId` must use Dell's matching value:
+Use the current UTC time for `timestamp`. The `message` field describes the
+failure and accepts up to 7,500 characters. Dell marks it as optional, but a
+new request should include enough detail for Technical Support to investigate.
+
+`eventSource` identifies the hardware category, and its `eventId` or `trapId`
+must use Dell's matching value:
 
 | Hardware category | `eventSource` | `eventId` | `trapId` |
 | --- | --- | --- | --- |

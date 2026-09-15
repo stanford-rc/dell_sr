@@ -143,6 +143,35 @@ Submit the payload with:
 ./dell_sr.sh create case.json
 ```
 
+### Close a support request
+
+Close a request only after the issue is resolved. Create `close.json` with the
+five fields required by Dell:
+
+```json
+{
+  "clientID": "YOUR_REGISTERED_CLIENT_ID",
+  "clientType": "HELPDESK",
+  "companyName": "Example Company",
+  "serviceTag": "ABC1234",
+  "srNumber": "123456789"
+}
+```
+
+Use the client ID and company name from registration. `clientType` corresponds
+to the registration `type` and should remain `HELPDESK`. The service tag and SR
+number must identify the request being closed.
+
+Pass the SR number again on the command line:
+
+```console
+./dell_sr.sh close close.json 123456789
+```
+
+The script refuses to continue unless that confirmation matches `srNumber` in
+the JSON file. Dell requires contacting Technical Support within 10 days to
+reopen a closed request.
+
 ### Other operations
 
 ```console
@@ -150,7 +179,6 @@ Submit the payload with:
 ./dell_sr.sh get 123456789 ABC1234
 ./dell_sr.sh note 123456789 "Diagnostic completed"
 ./dell_sr.sh attach 123456789 user@example.com diagnostics.zip
-./dell_sr.sh close close.json 123456789
 ```
 
 The `register`, `create`, and `close` commands accept the JSON payloads defined

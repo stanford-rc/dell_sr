@@ -79,6 +79,12 @@ submit the file:
 ./dell_sr.sh register register.json
 ```
 
+The registration `type` and the case payload's `client.type` identify the API
+client integration. For this API, use `HELPDESK` in both places. This field
+does not describe the affected hardware; the hardware category belongs in
+`device.type`, such as `PowerEdge`. Use another client type only if Dell assigns
+one for a different integration model.
+
 Save the `client ID` returned by Dell. It is required in every case payload.
 Registration should not be repeated unless Dell directs you to register a new
 customer instance.

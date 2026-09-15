@@ -48,17 +48,93 @@ Commands:
   close CLOSE_JSON CONFIRM_SR_NUMBER
 ```
 
-Register the client once before creating support requests:
+### Register the client
+
+Register once for each TechDirect customer instance. Create `register.json`
+with the company and primary support contact:
+
+```json
+{
+  "id": "0",
+  "type": "HELPDESK",
+  "ipaddress": "192.0.2.10",
+  "companyName": "Example University",
+  "countryCodeISO": "USA",
+  "emailOptIn": true,
+  "primaryContact": {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "phoneNumber": "6505550100",
+    "emailAddress": "jane.doe@example.com",
+    "preferredContactMethod": "Email",
+    "preferredLanguage": "en"
+  }
+}
+```
+
+Replace the example values with the real company, client IP address, and
+contact information. Keep `id` set to `0` for the initial registration, then
+submit the file:
 
 ```console
 ./dell_sr.sh register register.json
 ```
 
-Common operations:
+Save the `client ID` returned by Dell. It is required in every case payload.
+Registration should not be repeated unless Dell directs you to register a new
+customer instance.
+
+### Create a support request
+
+Create `case.json` using the registered client ID and the affected system's
+service tag:
+
+```json
+{
+  "trapId": "0",
+  "eventId": "hardware_failure",
+  "eventSource": "Client",
+  "timestamp": "2026-09-15T19:00:00Z",
+  "message": "Describe the failure, diagnostics, and troubleshooting already performed.",
+  "client": {
+    "id": "YOUR_REGISTERED_CLIENT_ID",
+    "type": "HELPDESK",
+    "ipAddress": "192.0.2.10",
+    "companyName": "Example University",
+    "emailOptIn": true,
+    "countryCodeISO": "USA",
+    "primaryContact": {
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "phoneNumber": "6505550100",
+      "emailAddress": "jane.doe@example.com",
+      "preferredContactMethod": "Email",
+      "preferredLanguage": "en"
+    }
+  },
+  "device": {
+    "name": "host.example.com",
+    "serviceTag": "ABC1234",
+    "type": "PowerEdge",
+    "os": "Linux"
+  }
+}
+```
+
+Use the current UTC time for `timestamp`. The `message` can contain up to 7,500
+characters. If an API-created request is already active for the service tag,
+Dell appends the new report to that request instead of opening a duplicate.
+
+Submit the payload with:
+
+```console
+./dell_sr.sh create case.json
+```
+
+### Other operations
 
 ```console
 ./dell_sr.sh auth
-./dell_sr.sh create case.json
 ./dell_sr.sh get 123456789 ABC1234
 ./dell_sr.sh note 123456789 "Diagnostic completed"
 ./dell_sr.sh attach 123456789 user@example.com diagnostics.zip

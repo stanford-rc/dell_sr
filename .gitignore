@@ -1,2 +1,6 @@
 .creds
 dell_sr_dump.json
+register.json
+case.json
+close.json
+*.swp

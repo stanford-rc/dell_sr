@@ -182,9 +182,50 @@ reopen a closed request.
 ```console
 ./dell_sr.sh auth
 ./dell_sr.sh get 123456789 ABC1234
+```
+
+Add a note directly or read it from a file. Notes are limited to 10,000
+characters:
+
+```console
 ./dell_sr.sh note 123456789 "Diagnostic completed"
+./dell_sr.sh note 123456789 @note.txt
+```
+
+An argument beginning with `@` names a file. Use `@@` when the note text itself
+must begin with `@`; the script removes the first character:
+
+```console
+./dell_sr.sh note 123456789 "@@on-call confirmed the repair"
+```
+
+Attach a supporting file with the requester's email address:
+
+```console
 ./dell_sr.sh attach 123456789 user@example.com diagnostics.zip
 ```
+
+The script divides files into chunks no larger than 20 MiB, uploads them in
+order, and polls Dell's vulnerability scan for about two minutes. If the scan
+has not reported `Completed`, the script reports that Dell
+accepted the upload but did not confirm it within the polling period.
+
+Dell rejects these attachment extensions: `asp`, `aspx`, `axd`, `asx`, `asmx`,
+`ashx`, `shtml`, `mhtml`, `xhtml`, `mht`, `scr`, `lnk`, `msi`, `msp`, `ps1`,
+`reg`, `vb`, `vbs`, `hta`, `ws`, and `dll`.
+
+### Troubleshooting
+
+Use `-j` to print the API response as JSON. Use `-d` to save the last raw API
+response to `dell_sr_dump.json`. Set `DEBUG=1` to print request methods, URLs,
+and HTTP status codes without printing credentials or access tokens:
+
+```console
+DEBUG=1 ./dell_sr.sh -j -d get 123456789 ABC1234
+```
+
+The `auth` command requests a fresh OAuth token and verifies the configured
+credentials.
 
 The `register`, `create`, and `close` commands accept the JSON payloads defined
 in Dell's SDK. Download the current Technical Support Request SDK from the API

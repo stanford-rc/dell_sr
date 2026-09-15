@@ -14,6 +14,8 @@ readonly token_url=https://apigtwb2c.us.dell.com/auth/oauth/v2/token
 readonly webcase_url=https://apigtwb2c.us.dell.com/td/PROD/webcase
 readonly getcase_url=https://apigtwb2c.us.dell.com/td/PROD/getcaselite
 readonly attachment_url=https://apigtwb2c.us.dell.com/PROD/TDAttachment
+readonly attachment_poll_attempts=40
+readonly attachment_poll_interval=3
 
 json=0
 dump=0
@@ -73,6 +75,7 @@ Commands:
 
   note SR_NUMBER TEXT|@FILE
       Append a note of at most 10,000 characters.
+      Prefix text with @@ to preserve one leading @ character.
 
   attach SR_NUMBER EMAIL FILE
       Upload a supporting file in 20 MiB chunks.
@@ -328,7 +331,8 @@ upload_chunk() {
 }
 
 command_attach() {
-    local sr=$1 email=$2 file=$3 size initiate file_id upload_id chunk n complete status_body attempt
+    local sr=$1 email=$2 file=$3 size initiate file_id upload_id chunk n complete status_body
+    local attempt status
     [[ $sr =~ ^[0-9]+$ ]] || err "invalid SR number ($sr)"
     [[ $email == *@*.* ]] || err "invalid email address ($email)"
     [[ -r $file && -f $file ]] || err "cannot read attachment $file"
@@ -357,13 +361,14 @@ command_attach() {
 
     status_body=$(jq -nc --arg email "$email" --arg file "$file_id" \
         '{emailId:$email,fileId:$file}')
-    for ((attempt = 1; attempt <= 10; attempt++)); do
+    for ((attempt = 1; attempt <= attachment_poll_attempts; attempt++)); do
         json_call POST "$attachment_url/public/v2/file-status" "$status_body"
-        [[ $(jq -r '.status // ""' <<< "$response") == Completed ]] && return
-        debug "attachment scan pending (attempt $attempt of 10)"
-        sleep 3
+        status=$(jq -r '.status // "unknown"' <<< "$response")
+        [[ $status == Completed ]] && return
+        debug "attachment scan pending (attempt $attempt of $attachment_poll_attempts, status $status)"
+        (( attempt < attachment_poll_attempts )) && sleep "$attachment_poll_interval"
     done
-    err "attachment upload did not reach Completed status within 30 seconds"
+    err "attachment upload was accepted, but Dell did not finish scanning it after two minutes of polling (last status: $status)"
 }
 
 # argument parsing -------------------------------------------------------------
@@ -427,7 +432,9 @@ case $command in
     note)
         [[ $# -eq 2 ]] || err "note requires SR_NUMBER TEXT|@FILE"
         [[ $1 =~ ^[0-9]+$ ]] || err "invalid SR number ($1)"
-        if [[ $2 == @* ]]; then
+        if [[ $2 == @@* ]]; then
+            note_text=${2#@}
+        elif [[ $2 == @* ]]; then
             note_file=${2#@}
             [[ -r $note_file && -f $note_file ]] || err "cannot read note file $note_file"
             note_text=$(<"$note_file")

@@ -224,8 +224,9 @@ and HTTP status codes without printing credentials or access tokens:
 DEBUG=1 ./dell_sr.sh -j -d get 123456789 ABC1234
 ```
 
-The `auth` command requests a fresh OAuth token and verifies the configured
-credentials.
+The `auth` command requests a fresh OAuth token. It confirms that Dell accepts
+the configured OAuth credentials, but it does not test access to the support
+request endpoints.
 
 The `register`, `create`, and `close` commands accept the JSON payloads defined
 in Dell's SDK. Download the current Technical Support Request SDK from the API

@@ -24,7 +24,7 @@ credentials_file=$script_dir/.creds
 response=""
 http_status=""
 tmp_dir=""
-auth_header=""
+auth_config=""
 auth_retry=0
 
 # functions -------------------------------------------------------------------
@@ -61,7 +61,7 @@ Usage:  $script [-j] [-d] COMMAND [ARGS]
 
 Commands:
   auth
-      Check OAuth authentication.
+      Request a fresh OAuth token.
 
   register CLIENT_JSON
       Register the WebCase client. Run this once.
@@ -133,9 +133,14 @@ valid_json_file() {
         err "$file must contain exactly one JSON object"
 }
 
-write_auth_header() {
-    printf 'Authorization: Bearer %s\n' "$token" > "$auth_header"
-    chmod 600 "$auth_header"
+write_auth_config() {
+    local escaped_token
+    [[ $token != *$'\n'* && $token != *$'\r'* ]] || \
+        err "OAuth response contained an invalid access token"
+    escaped_token=${token//\\/\\\\}
+    escaped_token=${escaped_token//\"/\\\"}
+    printf 'header = "Authorization: Bearer %s"\n' "$escaped_token" > "$auth_config"
+    chmod 600 "$auth_config"
 }
 
 raw_call() {
@@ -145,7 +150,7 @@ raw_call() {
     curl_args=( --silent --show-error --proto '=https'
                 --connect-timeout 10 --max-time 180
                 --request "$method" --url "$url"
-                --header "@$auth_header" --header 'Accept: application/json'
+                --config "$auth_config" --header 'Accept: application/json'
                 --output "$response_file" --write-out '%{http_code}' )
     if [[ -n $body_file ]]; then
         curl_args+=( --header "Content-Type: $content_type" --data-binary "@$body_file" )
@@ -205,7 +210,7 @@ get_token() {
         if [[ $expires =~ ^[0-9]+$ ]] && (( expires > now + 60 )) && \
            [[ $cached_client == "$oauth_client_id" ]]; then
             token=$(jq -r '.access_token // ""' "$cache_file")
-            [[ -n $token ]] && { debug "using cached OAuth token"; write_auth_header; return; }
+            [[ -n $token ]] && { debug "using cached OAuth token"; write_auth_config; return; }
         fi
     fi
 
@@ -241,7 +246,7 @@ get_token() {
         > "$cache_tmp" || err "cannot write token cache"
     chmod 600 "$cache_tmp"
     mv -f "$cache_tmp" "$cache_file"
-    write_auth_header
+    write_auth_config
 }
 
 show_json_or_summary() {
@@ -260,7 +265,7 @@ show_json_or_summary() {
             echo "==========================================="
             echo " Dell TechDirect production"
             echo "==========================================="
-            echo " authentication      | successful"
+            echo " OAuth token         | acquired"
             ;;
         register)
             echo "==========================================="
@@ -319,7 +324,7 @@ upload_chunk() {
     http_status=$(curl --silent --show-error --proto '=https' \
         --connect-timeout 10 --max-time 300 --request POST \
         --url "$attachment_url/public/v3/upload-chunk?$query" \
-        --header "@$auth_header" --header 'Accept: application/json' \
+        --config "$auth_config" --header 'Accept: application/json' \
         --form-string "customerEmail=$email" \
         --form "file=@$chunk;filename=\"$safe_filename\"" \
         --output "$response_file" --write-out '%{http_code}') || \
@@ -392,7 +397,7 @@ check_req curl jq
 load_credentials
 tmp_dir=$(mktemp -d) || err "cannot create temporary directory"
 chmod 700 "$tmp_dir"
-auth_header=$tmp_dir/authorization-header
+auth_config=$tmp_dir/curl-auth.conf
 trap cleanup EXIT
 if [[ $command == auth ]]; then
     get_token refresh

@@ -96,9 +96,10 @@ service tag, and a description of the problem:
 
 ```json
 {
+  "trapId": "0",
   "eventId": "2",
   "eventSource": "Server",
-  "timestamp": "2026-09-15T19:00:00Z",
+  "timestamp": "2026-09-15T12:00:00 -0700",
   "message": "GPU 1 reports uncorrectable memory errors and row remapping failed.",
   "client": {
     "id": "YOUR_REGISTERED_CLIENT_ID",
@@ -121,9 +122,13 @@ service tag, and a description of the problem:
 }
 ```
 
-Use the current UTC time for `timestamp`. The `message` field describes the
-failure and accepts up to 7,500 characters. Dell marks it as optional, but a
-new request should include enough detail for Technical Support to investigate.
+Use the current time with its UTC offset for `timestamp`
+(`date '+%Y-%m-%dT%H:%M:%S %z'`); Dell rejects a trailing `Z`. `companyName`
+must match the registered client exactly.
+
+The `message` field describes the failure and accepts up to 7,500 characters.
+Dell marks it as optional, but a new request should include enough detail for
+Technical Support to investigate.
 
 `eventSource` identifies the hardware category, and its `eventId` or `trapId`
 must use Dell's matching value:
@@ -135,9 +140,10 @@ must use Dell's matching value:
 | Storage | `Storage` | `3` | `0` |
 | Direct-attached storage | `DirectAttach` | `4` | `0` |
 
-Dell requires at least one of `eventId` or `trapId`. The example supplies the
-server `eventId` and omits `trapId`. An invalid identifier, an unsupported
-source, or a mismatched combination causes case creation to fail.
+Supply both `eventId` and `trapId`. Without `trapId`, Dell returns
+`NoCaseUpdated` and opens no case. A request succeeded only if the response
+reports `CaseWarranty` and `CaseCreated` or `CaseAppended`. Dell accepts at most
+10 case requests per service tag per hour.
 
 If an API-created request is already active for the service tag, Dell appends
 the new report to that request instead of opening a duplicate.
